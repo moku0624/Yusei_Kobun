@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高校受験 中学古文単語マスター Phase 1 (必出60語)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #e74c3c;
+            --accent-color: #3498db;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        select, button {
+            padding: 10px 14px;
+            font-size: 0.95rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #2ecc71;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .card {
+            background: #fdfdfd;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .level-badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .underlined {
+            text-decoration: underline;
+            text-decoration-color: var(--secondary-color);
+            text-decoration-thickness: 3px;
+            font-weight: bold;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .option-btn {
+            text-align: left;
+            background: white;
+            color: var(--text-color);
+            border: 2px solid #e2e8f0;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--accent-color);
+            background: #f0f8ff;
+        }
+
+        .option-btn.correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+            font-weight: bold;
+        }
+
+        .option-btn.wrong {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #eef6fc;
+            border-left: 4px solid var(--accent-color);
+            border-radius: 4px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            display: none;
+        }
+
+        #quizArea {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>高校受験 古文単語マスター</h1>
+    
+    <div class="card">
+        <div class="controls">
+            <label for="levelSelect">難度レベルを選択:</label>
+            <select id="levelSelect">
+                <option value="1">Lv.1 (基本意味)</option>
+                <option value="2">Lv.2 (文脈理解)</option>
+                <option value="3">Lv.3 (現代語訳穴埋め)</option>
+            </select>
+            <button id="startBtn">学習を開始</button>
+        </div>
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div id="quizArea">
+        <div class="card">
+            <span class="level-badge" id="levelBadge"></span>
+            <div class="question-text" id="questionText"></div>
+            <div class="options-grid" id="optionsGrid"></div>
+            <div class="explanation" id="explanationBox"></div>
+            <button id="nextBtn" style="display:none; width:100%; margin-top:10px;">次の問題へ</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===================== 改善版データ =====================
+// distractorsを全面的に見直しました
+// 基本意味・文脈意味と被るものをすべて排除
+// 中学生が実際に古文で出会いそうな意味に統一
+
+const wordsData = [
+  {
+    id: 1, word: "いと", mean: "たいへん・とても",
+    example: "花、いとうつくし。", target: "いと",
+    contextMean: "とても", translate: "花がとてもかわいらしい。",
+    fillSentence: "花が【空欄】かわいらしい。", fillAnswer: "とても",
+    distractorsL1: ["少し", "たまに", "まったく"],
+    distractorsL2: ["少し", "突然", "ひそかに"],
+    distractorsL3: ["少し", "たまに", "ほとんど"],
+    exp: "程度が非常に大きいことを表す副詞。現代語の「とても」に近い。"
+  },
+  {
+    id: 2, word: "あはれなり", mean: "しみじみと趣深い",
+    example: "秋の月、あはれなり。", target: "あはれなり",
+    contextMean: "しみじみと趣深い", translate: "秋の月はしみじみと趣深い。",
+    fillSentence: "秋の月は【空欄】。", fillAnswer: "しみじみと趣深い",
+    distractorsL1: ["腹立たしい", "騒がしい", "恐ろしい"],
+    distractorsL2: ["明るくまぶしい", "にぎやかで楽しい", "不気味で恐ろしい"],
+    distractorsL3: ["明るくまぶしい", "騒がしく落ち着かない", "恐ろしく不気味だ"],
+    exp: "心に深く感じ入るさまを表す。「もののあはれ」と関係する重要語。"
+  },
+  {
+    id: 3, word: "をかし", mean: "趣がある・興味深い",
+    example: "雪の降りたるは、をかし。", target: "をかし",
+    contextMean: "趣がある", translate: "雪が降っているのは趣がある。",
+    fillSentence: "雪が降っているのは【空欄】。", fillAnswer: "趣がある",
+    distractorsL1: ["つらい", "不安だ", "腹立たしい"],
+    distractorsL2: ["寒くてつらい", "心配で落ち着かない", "腹立たしく感じる"],
+    distractorsL3: ["つらく感じる", "不安である", "腹立たしい"],
+    exp: "明るく知的な興趣・おもしろさを感じる語。「趣がある」「興味深い」などと訳す。"
+  },
+  {
+    id: 4, word: "かなし", mean: "かわいい・いとしい",
+    example: "小さき子の、かなしきこと。", target: "かなしき",
+    contextMean: "かわいい", translate: "小さい子がかわいいことだ。",
+    fillSentence: "小さい子が【空欄】ことだ。", fillAnswer: "かわいい",
+    distractorsL1: ["悲しい", "腹立たしい", "恐ろしい"],
+    distractorsL2: ["悲しく感じる", "腹が立つ", "恐ろしく感じる"],
+    distractorsL3: ["悲しい", "腹立たしい", "恐ろしい"],
+    exp: "古文では「かわいい・いとしい」の意味が重要。現代語の「悲しい」と取り違えやすい。"
+  },
+  {
+    id: 5, word: "うつくし", mean: "かわいらしい",
+    example: "うつくしき児の寝たる。", target: "うつくしき",
+    contextMean: "かわいらしい", translate: "かわいらしい子どもが寝ている。",
+    fillSentence: "【空欄】子どもが寝ている。", fillAnswer: "かわいらしい",
+    distractorsL1: ["立派だ", "恐ろしい", "気味が悪い"],
+    distractorsL2: ["身分の高い", "恐ろしい", "病気の"],
+    distractorsL3: ["立派な", "恐ろしい", "気味の悪い"],
+    exp: "古文では、小さいものなどを「かわいらしい」と感じる意味が中心。"
+  },
+  {
+    id: 6, word: "ありがたし", mean: "めったにない",
+    example: "ありがたき人に会ひぬ。", target: "ありがたき",
+    contextMean: "めったにない", translate: "めったにいない人に会った。",
+    fillSentence: "【空欄】人に会った。", fillAnswer: "めったにいない",
+    distractorsL1: ["感謝したい", "身分が低い", "ありふれている"],
+    distractorsL2: ["感謝すべき", "どこにでもいる", "身分の低い"],
+    distractorsL3: ["どこにでもいる", "感謝している", "身分の低い"],
+    exp: "「有ることが難しい」から「めったにない」。現代語の「ありがたい」だけで判断しない。"
+  },
+  {
+    id: 7, word: "めでたし", mean: "すばらしい・立派だ",
+    example: "めでたき人の御ありさま。", target: "めでたき",
+    contextMean: "立派だ", translate: "立派な方のご様子。",
+    fillSentence: "【空欄】方のご様子。", fillAnswer: "立派な",
+    distractorsL1: ["不吉だ", "みすぼらしい", "腹立たしい"],
+    distractorsL2: ["不吉な", "みすぼらしい", "気味の悪い"],
+    distractorsL3: ["不吉な", "みすぼらしい", "腹立たしい"],
+    exp: "ほめたたえる語で、「すばらしい」「立派だ」の意味。"
+  },
+  {
+    id: 8, word: "やがて", mean: "そのまま・すぐに",
+    example: "衣も脱がず、やがて寝ぬ。", target: "やがて",
+    contextMean: "そのまま", translate: "着物も脱がず、そのまま寝てしまった。",
+    fillSentence: "着物も脱がず、【空欄】寝てしまった。", fillAnswer: "そのまま",
+    distractorsL1: ["いつまでも", "わざわざ", "たびたび"],
+    distractorsL2: ["しばらくしてから", "何度も", "わざわざ"],
+    distractorsL3: ["しばらくしてから", "何度も", "わざわざ"],
+    exp: "古文の「やがて」には「そのまま」「すぐに」の意味がある。この文では前の状態を変えない「そのまま」。"
+  },
+  {
+    id: 9, word: "いつしか", mean: "早く・いつの間にか",
+    example: "いつしか都へ帰らむ。", target: "いつしか",
+    contextMean: "早く", translate: "早く都へ帰りたい。",
+    fillSentence: "【空欄】都へ帰りたい。", fillAnswer: "早く",
+    distractorsL1: ["ゆっくり", "決して", "たびたび"],
+    distractorsL2: ["ゆっくり", "ひそかに", "何度も"],
+    distractorsL3: ["ゆっくり", "ひそかに", "何度も"],
+    exp: "文脈により「早く（〜したい）」または「いつの間にか」。意志・願望と結びつくと「早く」が自然。"
+  },
+  {
+    id: 10, word: "あさまし", mean: "驚きあきれるほどだ",
+    example: "その振る舞ひ、あさまし。", target: "あさまし",
+    contextMean: "驚きあきれるほどだ", translate: "その振る舞いは、驚きあきれるほどだ。",
+    fillSentence: "その振る舞いは、【空欄】。", fillAnswer: "驚きあきれるほどだ",
+    distractorsL1: ["心細い", "待ち遠しい", "上品だ"],
+    distractorsL2: ["心細く感じる", "待ち遠しく思う", "上品で美しい"],
+    distractorsL3: ["心細く感じる", "待ち遠しく思う", "上品で美しい"],
+    exp: "予想外のことに驚く気持ちを表し、文脈によって「あきれる」「情けない」などにもなる。"
+  },
+  {
+    id: 11, word: "あやし", mean: "不思議だ・身分が低い・粗末だ",
+    example: "あやしきことを聞きつ。", target: "あやしき",
+    contextMean: "不思議な", translate: "不思議なことを聞いた。",
+    fillSentence: "【空欄】ことを聞いた。", fillAnswer: "不思議な",
+    distractorsL1: ["ありがたい", "待ち遠しい", "騒がしい"],
+    distractorsL2: ["よくある", "うれしい", "騒がしい"],
+    distractorsL3: ["よくある", "うれしい", "騒がしい"],
+    exp: "多義語。「不思議だ」のほか「身分が低い」「粗末だ」などもある。"
+  },
+  {
+    id: 12, word: "おどろく", mean: "目を覚ます・はっと気づく",
+    example: "暁に、おどろきて起きぬ。", target: "おどろきて",
+    contextMean: "目を覚まして", translate: "明け方に、目を覚まして起きた。",
+    fillSentence: "明け方に、【空欄】起きた。", fillAnswer: "目を覚まして",
+    distractorsL1: ["大声で叫ぶ", "眠り込む", "逃げ出す"],
+    distractorsL2: ["驚いて叫んで", "眠り込んで", "急いで逃げて"],
+    distractorsL3: ["驚いて叫んで", "眠り込んで", "急いで逃げて"],
+    exp: "古文では「眠りから覚める」「はっと気づく」が重要。現代語の「びっくりする」だけではない。"
+  },
+  {
+    id: 13, word: "ののしる", mean: "大声で騒ぐ・評判になる",
+    example: "世にののしる人なり。", target: "ののしる",
+    contextMean: "評判になっている", translate: "世間で評判になっている人である。",
+    fillSentence: "世間で【空欄】人である。", fillAnswer: "評判になっている",
+    distractorsL1: ["黙りこむ", "隠れ住む", "忘れられる"],
+    distractorsL2: ["悪口を言われている", "隠れて暮らす", "忘れられている"],
+    distractorsL3: ["悪口を言われている", "隠れて暮らしている", "忘れられている"],
+    exp: "「大声で騒ぐ」が基本で、そこから「世間で評判になる」の意味にもなる。現代語の「罵る」とは異なる。"
+  },
+  {
+    id: 14, word: "念ず", mean: "我慢する・祈る",
+    example: "涙を念じて、人に見せず。", target: "念じて",
+    contextMean: "我慢して", translate: "涙をこらえて、人に見せない。",
+    fillSentence: "涙を【空欄】、人に見せない。", fillAnswer: "こらえて",
+    distractorsL1: ["忘れる", "笑う", "疑う"],
+    distractorsL2: ["祈って", "忘れて", "流し続けて"],
+    distractorsL3: ["祈って", "忘れて", "流し続けて"],
+    exp: "「心を静めてこらえる」の意味が重要。文脈によっては「祈る」。"
+  },
+  {
+    id: 15, word: "覚ゆ", mean: "思われる・感じられる・似る",
+    example: "この児、父に覚ゆ。", target: "覚ゆ",
+    contextMean: "似ている", translate: "この子は父に似ている。",
+    fillSentence: "この子は父に【空欄】。", fillAnswer: "似ている",
+    distractorsL1: ["忘れる", "眠る", "争う"],
+    distractorsL2: ["覚えられている", "叱られている", "頼っている"],
+    distractorsL3: ["覚えられている", "叱られている", "頼っている"],
+    exp: "自発の意味から「思われる・感じられる」。文脈によって「似る」の意味にもなる。"
+  },
+  {
+    id: 16, word: "しのぶ", mean: "我慢する・人目を避ける",
+    example: "悲しさをしのびて、もの言はず。", target: "しのびて",
+    contextMean: "こらえて", translate: "悲しさをこらえて、何も言わない。",
+    fillSentence: "悲しさを【空欄】、何も言わない。", fillAnswer: "こらえて",
+    distractorsL1: ["言いふらす", "喜ぶ", "忘れる"],
+    distractorsL2: ["隠れて", "言いふらして", "喜んで"],
+    distractorsL3: ["隠れて", "言いふらして", "喜んで"],
+    exp: "「耐える・我慢する」と「人目を避ける」の二系統がある。この文では感情をこらえる意味。"
+  },
+  {
+    id: 17, word: "こころづきなし", mean: "気に入らない",
+    example: "その人の言ふこと、こころづきなし。", target: "こころづきなし",
+    contextMean: "気に入らない", translate: "その人の言うことが気に入らない。",
+    fillSentence: "その人の言うことが【空欄】。", fillAnswer: "気に入らない",
+    distractorsL1: ["待ち遠しい", "ありがたい", "頼もしい"],
+    distractorsL2: ["理解できない", "待ち遠しい", "ありがたい"],
+    distractorsL3: ["理解できない", "待ち遠しい", "ありがたい"],
+    exp: "好感が持てない、気に食わないという意味。"
+  },
+  {
+    id: 18, word: "ゆかし", mean: "見たい・聞きたい・知りたい",
+    example: "その物語の続き、ゆかし。", target: "ゆかし",
+    contextMean: "知りたい", translate: "その物語の続きが知りたい。",
+    fillSentence: "その物語の続きが【空欄】。", fillAnswer: "知りたい",
+    distractorsL1: ["忘れたい", "恐ろしい", "腹立たしい"],
+    distractorsL2: ["読みたくない", "忘れたい", "腹立たしい"],
+    distractorsL3: ["読みたくない", "忘れたい", "腹立たしい"],
+    exp: "心がひかれて、見たい・聞きたい・知りたいと思う気持ち。"
+  },
+  {
+    id: 19, word: "むつかし", mean: "不快だ・うっとうしい",
+    example: "雨降り続きて、むつかし。", target: "むつかし",
+    contextMean: "うっとうしい", translate: "雨が降り続いて、うっとうしい。",
+    fillSentence: "雨が降り続いて、【空欄】。", fillAnswer: "うっとうしい",
+    distractorsL1: ["簡単だ", "めでたい", "かわいらしい"],
+    distractorsL2: ["難しくて解けない", "めでたく感じる", "かわいらしい"],
+    distractorsL3: ["難しくて解けない", "めでたく感じる", "かわいらしい"],
+    exp: "現代語の「難しい」と異なり、「不快だ・わずらわしい・うっとうしい」。"
+  },
+  {
+    id: 20, word: "いみじ", mean: "程度がはなはだしい・すばらしい",
+    example: "風いみじく吹く。", target: "いみじく",
+    contextMean: "ひどく", translate: "風がひどく吹く。",
+    fillSentence: "風が【空欄】吹く。", fillAnswer: "ひどく",
+    distractorsL1: ["わずかだ", "普通だ", "静かだ"],
+    distractorsL2: ["少しだけ", "静かに", "時々"],
+    distractorsL3: ["少しだけ", "静かに", "時々"],
+    exp: "程度の甚だしさを表す。よい意味にも悪い意味にも使う。"
+  },
+  {
+    id: 21, word: "おぼつかなし", mean: "はっきりしない・不安だ",
+    example: "夜道、おぼつかなし。", target: "おぼつかなし",
+    contextMean: "不安だ", translate: "夜道は不安だ。",
+    fillSentence: "夜道は【空欄】。", fillAnswer: "不安だ",
+    distractorsL1: ["確かだ", "にぎやかだ", "立派だ"],
+    distractorsL2: ["明るくて安心だ", "にぎやかだ", "立派だ"],
+    distractorsL3: ["明るくて安心だ", "にぎやかだ", "立派だ"],
+    exp: "物事がはっきりせず心もとない状態。「不安だ」「気がかりだ」など。"
+  },
+  {
+    id: 22, word: "心もとなし", mean: "待ち遠しい・不安だ・じれったい",
+    example: "使ひの帰るほど、心もとなし。", target: "心もとなし",
+    contextMean: "待ち遠しい", translate: "使いの者が帰ってくるまでが待ち遠しい。",
+    fillSentence: "使いの者が帰ってくるまでが【空欄】。", fillAnswer: "待ち遠しい",
+    distractorsL1: ["満足だ", "腹立たしい", "めでたい"],
+    distractorsL2: ["どうでもよい", "うれしくてたまらない", "腹立たしい"],
+    distractorsL3: ["どうでもよい", "うれしくてたまらない", "腹立たしい"],
+    exp: "「待ち遠しい」「じれったい」「不安だ」など、心が落ち着かない状態を表す多義語。"
+  },
+  {
+    id: 23, word: "つくづくと", mean: "しみじみと・じっと",
+    example: "つくづくと昔を思ふ。", target: "つくづくと",
+    contextMean: "しみじみと", translate: "しみじみと昔を思う。",
+    fillSentence: "【空欄】昔を思う。", fillAnswer: "しみじみと",
+    distractorsL1: ["急いで", "いい加減に", "突然"],
+    distractorsL2: ["急いで", "ぼんやりと", "ふざけて"],
+    distractorsL3: ["急いで", "ぼんやりと", "ふざけて"],
+    exp: "一つのことに心を向けて、じっと・しみじみとする様子。"
+  },
+  {
+    id: 24, word: "げに", mean: "なるほど・本当に",
+    example: "げに、その人の言ふとほりなり。", target: "げに",
+    contextMean: "なるほど", translate: "なるほど、その人の言うとおりだ。",
+    fillSentence: "【空欄】、その人の言うとおりだ。", fillAnswer: "なるほど",
+    distractorsL1: ["たぶん", "決して", "たまたま"],
+    distractorsL2: ["おそらく", "まさか", "偶然にも"],
+    distractorsL3: ["おそらく", "まさか", "偶然にも"],
+    exp: "相手の言葉や事実に納得して「なるほど」「本当に」と言う語。"
+  },
+  {
+    id: 25, word: "いさ", mean: "さあ、どうだろう",
+    example: "いさ、知らず。", target: "いさ",
+    contextMean: "さあ、どうだろう", translate: "さあ、どうだろう、分からない。",
+    fillSentence: "【空欄】、分からない。", fillAnswer: "さあ、どうだろう",
+    distractorsL1: ["もちろん", "必ず", "すぐに"],
+    distractorsL2: ["もちろん", "間違いなく", "急いで"],
+    distractorsL3: ["もちろん", "間違いなく", "急いで"],
+    exp: "返答をためらうときの語。「さあ、どうだろう」「いや、分からない」。"
+  },
+  {
+    id: 26, word: "よも〜じ", mean: "まさか〜ないだろう",
+    example: "よも来じ。", target: "よも",
+    contextMean: "まさか", translate: "まさか来ないだろう。",
+    fillSentence: "【空欄】来ないだろう。", fillAnswer: "まさか",
+    distractorsL1: ["きっと", "いつも", "すでに"],
+    distractorsL2: ["きっと", "必ず", "すでに"],
+    distractorsL3: ["きっと", "必ず", "すでに"],
+    exp: "「よも」は打消推量の「じ」などと呼応して、「まさか〜ないだろう」。"
+  },
+  {
+    id: 27, word: "さらに〜打消し", mean: "まったく〜ない",
+    example: "さらに知らず。", target: "さらに",
+    contextMean: "まったく", translate: "まったく知らない。",
+    fillSentence: "【空欄】知らない。", fillAnswer: "まったく",
+    distractorsL1: ["少しだけ", "もう一度", "そのうえ"],
+    distractorsL2: ["もう一度", "さらに詳しく", "少しだけ"],
+    distractorsL3: ["もう一度", "さらに詳しく", "少しだけ"],
+    exp: "打消し表現を伴うと「少しも〜ない」「まったく〜ない」。"
+  },
+  {
+    id: 28, word: "いかで", mean: "どうして・どうにかして",
+    example: "いかでこの文を届けむ。", target: "いかで",
+    contextMean: "どうにかして", translate: "どうにかしてこの手紙を届けたい。",
+    fillSentence: "【空欄】この手紙を届けたい。", fillAnswer: "どうにかして",
+    distractorsL1: ["決して", "たまたま", "ゆっくり"],
+    distractorsL2: ["なぜ", "決して", "たまたま"],
+    distractorsL3: ["なぜ", "決して", "たまたま"],
+    exp: "疑問なら「どうして」、願望・意志の文脈なら「どうにかして」。ここでは後者。"
+  },
+  {
+    id: 29, word: "など", mean: "どうして・なぜ",
+    example: "などか来ぬ。", target: "など",
+    contextMean: "どうして", translate: "どうして来ないのか。",
+    fillSentence: "【空欄】来ないのか。", fillAnswer: "どうして",
+    distractorsL1: ["いつ", "どこへ", "どれほど"],
+    distractorsL2: ["いつ", "どこへ", "どのくらい"],
+    distractorsL3: ["いつ", "どこへ", "どのくらい"],
+    exp: "「など」「などか」は疑問・反語で「どうして・なぜ」。現代語の例示の「など」と区別する。"
+  },
+  {
+    id: 30, word: "な〜そ", mean: "〜するな",
+    example: "な言ひそ。", target: "な",
+    contextMean: "言うな", translate: "言うな。",
+    fillSentence: "【空欄】。", fillAnswer: "言うな",
+    distractorsL1: ["言いなさい", "言ってもよい", "言うだろう"],
+    distractorsL2: ["言いなさい", "言ってもよい", "言うだろう"],
+    distractorsL3: ["言いなさい", "言ってもよい", "言うだろう"],
+    exp: "副詞「な」と終助詞「そ」が呼応する禁止表現。「〜するな」。"
+  },
+  {
+    id: 31, word: "文（ふみ）", mean: "手紙",
+    example: "文を書きて遣はす。", target: "文",
+    contextMean: "手紙", translate: "手紙を書いて送る。",
+    fillSentence: "【空欄】を書いて送る。", fillAnswer: "手紙",
+    distractorsL1: ["日記", "詩歌", "法律"],
+    distractorsL2: ["日記", "命令書", "物語"],
+    distractorsL3: ["日記", "命令書", "物語"],
+    exp: "古文の「文（ふみ）」は「手紙」の意味で頻出。"
+  },
+  {
+    id: 32, word: "消息（せうそこ）", mean: "手紙・便り",
+    example: "消息を遣はす。", target: "消息",
+    contextMean: "手紙", translate: "手紙を送る。",
+    fillSentence: "【空欄】を送る。", fillAnswer: "手紙",
+    distractorsL1: ["宴会", "贈り物", "家来"],
+    distractorsL2: ["贈り物", "使者", "食べ物"],
+    distractorsL3: ["贈り物", "使者", "食べ物"],
+    exp: "「せうそこ」。便り・手紙・訪問などの意味があり、この文では手紙。"
+  },
+  {
+    id: 33, word: "情け", mean: "思いやり・風流を解する心",
+    example: "情けある人なり。", target: "情け",
+    contextMean: "思いやり", translate: "思いやりのある人である。",
+    fillSentence: "【空欄】のある人である。", fillAnswer: "思いやり",
+    distractorsL1: ["怒り", "欲深さ", "臆病さ"],
+    distractorsL2: ["怒り", "欲深さ", "臆病さ"],
+    distractorsL3: ["怒り", "欲深さ", "臆病さ"],
+    exp: "人への思いやりのほか、男女の情愛や風流を理解する心も表す。"
+  },
+  {
+    id: 34, word: "あまた", mean: "たくさん",
+    example: "人あまた集まりぬ。", target: "あまた",
+    contextMean: "たくさん", translate: "人がたくさん集まった。",
+    fillSentence: "人が【空欄】集まった。", fillAnswer: "たくさん",
+    distractorsL1: ["一人だけ", "少しだけ", "誰も"],
+    distractorsL2: ["一人だけ", "少しだけ", "誰も"],
+    distractorsL3: ["一人だけ", "少しだけ", "誰も"],
+    exp: "数量の多さを表す。「数多」と書くこともある。"
+  },
+  {
+    id: 35, word: "そこばく", mean: "たくさん・いくらか",
+    example: "そこばくの財を得たり。", target: "そこばく",
+    contextMean: "たくさんの", translate: "たくさんの財産を得た。",
+    fillSentence: "【空欄】財産を得た。", fillAnswer: "たくさんの",
+    distractorsL1: ["ほんの少しの", "一つだけの", "何もない"],
+    distractorsL2: ["ほんの少しの", "一つだけの", "価値のない"],
+    distractorsL3: ["ほんの少しの", "一つだけの", "価値のない"],
+    exp: "数量を表し、「たくさん」「いくらか」。この文では多量の意味。"
+  },
+  {
+    id: 36, word: "そらなり", mean: "いい加減だ・うわの空だ",
+    example: "そらなることを言ふ。", target: "そらなる",
+    contextMean: "いい加減な", translate: "いい加減なことを言う。",
+    fillSentence: "【空欄】ことを言う。", fillAnswer: "いい加減な",
+    distractorsL1: ["正確だ", "熱心だ", "丁寧だ"],
+    distractorsL2: ["正確な", "心をこめた", "詳しい"],
+    distractorsL3: ["正確な", "心をこめた", "詳しい"],
+    exp: "心がそこにない、確かでない様子を表す。この文では「いい加減な」。"
+  },
+  {
+    id: 37, word: "おろかなり", mean: "おろそかだ・いい加減だ",
+    example: "学びをおろかにす。", target: "おろかに",
+    contextMean: "おろそかに", translate: "学問をおろそかにする。",
+    fillSentence: "学問を【空欄】する。", fillAnswer: "おろそかに",
+    distractorsL1: ["熱心だ", "念入りだ", "慎重だ"],
+    distractorsL2: ["愚かに", "熱心に", "念入りに"],
+    distractorsL3: ["愚かに", "熱心に", "念入りに"],
+    exp: "古文では「十分でない・おろそかだ」。現代語の「愚かだ」とは区別する。"
+  },
+  {
+    id: 38, word: "ねんごろなり", mean: "心をこめて丁寧だ・親密だ",
+    example: "客をねんごろにもてなす。", target: "ねんごろに",
+    contextMean: "心をこめて丁寧に", translate: "客を心をこめて丁寧にもてなす。",
+    fillSentence: "客を【空欄】もてなす。", fillAnswer: "心をこめて丁寧に",
+    distractorsL1: ["冷淡だ", "乱暴だ", "いい加減だ"],
+    distractorsL2: ["形式的に", "乱暴に", "無関心に"],
+    distractorsL3: ["形式的に", "乱暴に", "無関心に"],
+    exp: "「丁寧だ・親密だ・熱心だ」など。単なる「一生懸命」より、心をこめるニュアンスがある。"
+  },
+  {
+    id: 39, word: "つれづれなり", mean: "退屈だ・手持ちぶさただ",
+    example: "つれづれなるままに、筆を取る。", target: "つれづれなる",
+    contextMean: "することもなく退屈な", translate: "することもなく退屈なのにまかせて、筆を取る。",
+    fillSentence: "【空欄】のにまかせて、筆を取る。", fillAnswer: "することもなく退屈な",
+    distractorsL1: ["忙しい", "満ち足りている", "腹立たしい"],
+    distractorsL2: ["忙しく落ち着かない", "うれしくて仕方ない", "腹立たしい"],
+    distractorsL3: ["忙しく落ち着かない", "うれしくて仕方ない", "腹立たしい"],
+    exp: "することがなく、退屈で手持ちぶさたな状態。『徒然草』冒頭で有名。"
+  },
+  {
+    id: 40, word: "徒然（つれづれ）", mean: "退屈・手持ちぶさた",
+    example: "徒然を慰む。", target: "徒然",
+    contextMean: "退屈", translate: "退屈をまぎらわす。",
+    fillSentence: "【空欄】をまぎらわす。", fillAnswer: "退屈",
+    distractorsL1: ["怒り", "空腹", "病気"],
+    distractorsL2: ["怒り", "空腹", "病気"],
+    distractorsL3: ["怒り", "空腹", "病気"],
+    exp: "「つれづれなり」の名詞的な用法。することがなく退屈なこと。"
+  },
+  {
+    id: 41, word: "いたづらなり", mean: "むだだ・むなしい",
+    example: "時をいたづらに過ぐす。", target: "いたづらに",
+    contextMean: "むなしく", translate: "時間をむなしく過ごす。",
+    fillSentence: "時間を【空欄】過ごす。", fillAnswer: "むなしく",
+    distractorsL1: ["有意義だ", "慎重だ", "幸福だ"],
+    distractorsL2: ["楽しく", "有意義に", "慎重に"],
+    distractorsL3: ["楽しく", "有意義に", "慎重に"],
+    exp: "役に立たない・成果がないことを表す。「むだだ」「むなしい」。"
+  },
+  {
+    id: 42, word: "いたづらに", mean: "むなしく・むだに",
+    example: "いたづらに日を送りぬ。", target: "いたづらに",
+    contextMean: "むなしく", translate: "むなしく日々を過ごした。",
+    fillSentence: "【空欄】日々を過ごした。", fillAnswer: "むなしく",
+    distractorsL1: ["有意義に", "慎重に", "急いで"],
+    distractorsL2: ["有意義に", "忙しく", "慎重に"],
+    distractorsL3: ["有意義に", "忙しく", "慎重に"],
+    exp: "何の成果もなく過ごすさま。「むなしく」「むだに」。"
+  },
+  {
+    id: 43, word: "年ごろ", mean: "長年・数年来",
+    example: "年ごろ願ひつることかなひぬ。", target: "年ごろ",
+    contextMean: "長年", translate: "長年願っていたことがかなった。",
+    fillSentence: "【空欄】願っていたことがかなった。", fillAnswer: "長年",
+    distractorsL1: ["今日だけ", "毎朝", "一瞬"],
+    distractorsL2: ["一日だけ", "毎年一度", "突然"],
+    distractorsL3: ["一日だけ", "毎年一度", "突然"],
+    exp: "「長年」「数年来」。現代語の「年頃＝年齢のころ」とは異なる。"
+  },
+  {
+    id: 44, word: "日ごろ", mean: "数日来・数日間",
+    example: "日ごろ待ちつる人来たり。", target: "日ごろ",
+    contextMean: "ここ数日", translate: "ここ数日待っていた人が来た。",
+    fillSentence: "【空欄】待っていた人が来た。", fillAnswer: "ここ数日",
+    distractorsL1: ["毎日いつも", "一年前から", "一瞬だけ"],
+    distractorsL2: ["普段からいつも", "一年前から", "今日初めて"],
+    distractorsL3: ["普段からいつも", "一年前から", "今日初めて"],
+    exp: "古文では「数日来・数日間」の意味が重要。現代語の「普段」と区別する。"
+  },
+  {
+    id: 45, word: "月ごろ", mean: "数か月来・数か月間",
+    example: "月ごろ病みて、今日起きたり。", target: "月ごろ",
+    contextMean: "ここ数か月", translate: "ここ数か月病気で、今日起き上がった。",
+    fillSentence: "【空欄】病気で、今日起き上がった。", fillAnswer: "ここ数か月",
+    distractorsL1: ["毎月一度", "昨日から", "一瞬だけ"],
+    distractorsL2: ["毎月一度", "昨日から", "今日だけ"],
+    distractorsL3: ["毎月一度", "昨日から", "今日だけ"],
+    exp: "「数か月来・数か月間」。期間の長さを表す。"
+  },
+  {
+    id: 46, word: "便り", mean: "都合・機会・手段",
+    example: "よき便りありて、宮へ参る。", target: "便り",
+    contextMean: "よい機会", translate: "よい機会があって、宮中へ参上する。",
+    fillSentence: "【空欄】があって、宮中へ参上する。", fillAnswer: "よい機会",
+    distractorsL1: ["障害", "災難", "命令"],
+    distractorsL2: ["手紙", "悪い知らせ", "命令"],
+    distractorsL3: ["手紙", "悪い知らせ", "命令"],
+    exp: "古文の「便り」は「都合・機会・手段」など。この文では好都合な機会。"
+  },
+  {
+    id: 47, word: "ついで", mean: "機会・順序",
+    example: "参詣のついでに、友を訪ふ。", target: "ついで",
+    contextMean: "機会", translate: "参詣の機会に、友人を訪ねる。",
+    fillSentence: "参詣の【空欄】に、友人を訪ねる。", fillAnswer: "機会",
+    distractorsL1: ["失敗", "命令", "理由"],
+    distractorsL2: ["直後", "失敗", "命令"],
+    distractorsL3: ["直後", "失敗", "命令"],
+    exp: "物事の順序・機会を表す。現代語の「〜したついでに」にもつながる。"
+  },
+  {
+    id: 48, word: "様（さま）", mean: "姿・ありさま",
+    example: "昔の様を変へて、僧となる。", target: "様",
+    contextMean: "姿", translate: "昔の姿を変えて、僧になる。",
+    fillSentence: "昔の【空欄】を変えて、僧になる。", fillAnswer: "姿",
+    distractorsL1: ["命令", "名前", "年齢"],
+    distractorsL2: ["方法", "名前", "年齢"],
+    distractorsL3: ["方法", "名前", "年齢"],
+    exp: "「姿・ありさま・様子」。文脈によって「方法・方向」などもある。"
+  },
+  {
+    id: 49, word: "気色（けしき）", mean: "様子・顔色・機嫌",
+    example: "帝の御気色、悪し。", target: "御気色",
+    contextMean: "ご機嫌", translate: "帝のご機嫌が悪い。",
+    fillSentence: "帝の【空欄】が悪い。", fillAnswer: "ご機嫌",
+    distractorsL1: ["住まい", "身分", "命令"],
+    distractorsL2: ["景色", "住まい", "身分"],
+    distractorsL3: ["景色", "住まい", "身分"],
+    exp: "「様子・顔色・機嫌」など。この文では人の感情の表れを指して「ご機嫌」。"
+  },
+  {
+    id: 50, word: "すさまじ", mean: "興ざめだ・殺風景だ",
+    example: "花もなき庭、すさまじ。", target: "すさまじ",
+    contextMean: "殺風景だ", translate: "花もない庭は殺風景だ。",
+    fillSentence: "花もない庭は【空欄】。", fillAnswer: "殺風景だ",
+    distractorsL1: ["華やかだ", "めでたい", "かわいらしい"],
+    distractorsL2: ["華やかだ", "にぎやかだ", "美しい"],
+    distractorsL3: ["華やかだ", "にぎやかだ", "美しい"],
+    exp: "現代語の「ものすごい」と違い、期待が外れて興ざめなこと、殺風景なことを表す。"
+  },
+  {
+    id: 51, word: "びんなし（便なし）", mean: "都合が悪い・具合が悪い",
+    example: "今参るは、びんなきことなり。", target: "びんなき",
+    contextMean: "都合が悪い", translate: "今参上するのは都合が悪いことである。",
+    fillSentence: "今参上するのは【空欄】ことである。", fillAnswer: "都合が悪い",
+    distractorsL1: ["都合がよい", "めでたい", "珍しい"],
+    distractorsL2: ["不便で遠い", "都合がよい", "めでたい"],
+    distractorsL3: ["不便で遠い", "都合がよい", "めでたい"],
+    exp: "「便（びん）がない」から「都合が悪い・具合が悪い」。現代語の単なる「不便」とはずれることがある。"
+  },
+  {
+    id: 52, word: "わびし", mean: "つらい・心細い",
+    example: "ひとり住むこと、わびし。", target: "わびし",
+    contextMean: "つらい", translate: "一人で暮らすことがつらい。",
+    fillSentence: "一人で暮らすことが【空欄】。", fillAnswer: "つらい",
+    distractorsL1: ["楽しい", "誇らしい", "めでたい"],
+    distractorsL2: ["楽しい", "誇らしい", "めでたい"],
+    distractorsL3: ["楽しい", "誇らしい", "めでたい"],
+    exp: "思いどおりにならず困る気持ち。「つらい・心細い・困る」。"
+  },
+  {
+    id: 53, word: "あたらし", mean: "惜しい・もったいない",
+    example: "あたらしき命を失ふ。", target: "あたらしき",
+    contextMean: "惜しい", translate: "惜しい命を失う。",
+    fillSentence: "【空欄】命を失う。", fillAnswer: "惜しい",
+    distractorsL1: ["新しい", "古い", "短い"],
+    distractorsL2: ["新しい", "若い", "短い"],
+    distractorsL3: ["新しい", "若い", "短い"],
+    exp: "古文では「惜しい・もったいない」。現代語の「あたらしい」と意味が異なる。"
+  },
+  {
+    id: 54, word: "口惜し（くちをし）", mean: "残念だ・くやしい",
+    example: "会へぬこと、口惜し。", target: "口惜し",
+    contextMean: "残念だ", translate: "会えないことが残念だ。",
+    fillSentence: "会えないことが【空欄】。", fillAnswer: "残念だ",
+    distractorsL1: ["うれしい", "待ち遠しい", "立派だ"],
+    distractorsL2: ["うれしい", "どうでもよい", "立派だ"],
+    distractorsL3: ["うれしい", "どうでもよい", "立派だ"],
+    exp: "期待どおりにならず「残念だ・くやしい」。"
+  },
+  {
+    id: 55, word: "おぼえ", mean: "評判・寵愛",
+    example: "帝のおぼえ、めでたし。", target: "おぼえ",
+    contextMean: "寵愛", translate: "帝からの寵愛が厚い。",
+    fillSentence: "帝からの【空欄】が厚い。", fillAnswer: "寵愛",
+    distractorsL1: ["記憶力", "命令", "恐れ"],
+    distractorsL2: ["記憶", "命令", "叱責"],
+    distractorsL3: ["記憶", "命令", "叱責"],
+    exp: "人からどう思われるかを表し、「評判」「目上の人からの寵愛」。この文では帝の寵愛。"
+  },
+  {
+    id: 56, word: "あながちに", mean: "むりに・強引に",
+    example: "あながちに人を引き留む。", target: "あながちに",
+    contextMean: "むりに", translate: "むりに人を引き留める。",
+    fillSentence: "【空欄】人を引き留める。", fillAnswer: "むりに",
+    distractorsL1: ["偶然に", "静かに", "少しずつ"],
+    distractorsL2: ["自然に", "遠慮して", "偶然に"],
+    distractorsL3: ["自然に", "遠慮して", "偶然に"],
+    exp: "相手の事情を顧みず「むりに・強引に」。"
+  },
+  {
+    id: 57, word: "いとど", mean: "ますます・いっそう",
+    example: "雨降りて、いとど寒し。", target: "いとど",
+    contextMean: "ますます", translate: "雨が降って、ますます寒い。",
+    fillSentence: "雨が降って、【空欄】寒い。", fillAnswer: "ますます",
+    distractorsL1: ["少しだけ", "突然", "たまたま"],
+    distractorsL2: ["少しだけ", "急に", "たまたま"],
+    distractorsL3: ["少しだけ", "急に", "たまたま"],
+    exp: "前より程度が増すことを表す。「ますます・いっそう」。"
+  },
+  {
+    id: 58, word: "おのづから", mean: "自然に・偶然に",
+    example: "時たてば、おのづから分かる。", target: "おのづから",
+    contextMean: "自然に", translate: "時がたてば、自然に分かる。",
+    fillSentence: "時がたてば、【空欄】分かる。", fillAnswer: "自然に",
+    distractorsL1: ["わざと", "無理に", "急いで"],
+    distractorsL2: ["わざと", "無理に", "急いで"],
+    distractorsL3: ["わざと", "無理に", "急いで"],
+    exp: "人為によらず「自然に」、また「偶然に」の意味。"
+  },
+  {
+    id: 59, word: "けち", mean: "不吉な兆し・異変",
+    example: "空にけち現れたり。", target: "けち",
+    contextMean: "不吉な兆し", translate: "空に不吉な兆しが現れた。",
+    fillSentence: "空に【空欄】が現れた。", fillAnswer: "不吉な兆し",
+    distractorsL1: ["祝い事", "宝物", "命令"],
+    distractorsL2: ["値引き", "祝い事", "美しい景色"],
+    distractorsL3: ["値引き", "祝い事", "美しい景色"],
+    exp: "現代語の「けち」と違い、怪しい出来事・不吉な兆しを表す。"
+  },
+  {
+    id: 60, word: "そこ", mean: "あなた・そなた",
+    example: "そこは、いづち行く。", target: "そこ",
+    contextMean: "あなた", translate: "あなたは、どこへ行くのか。",
+    fillSentence: "【空欄】は、どこへ行くのか。", fillAnswer: "あなた",
+    distractorsL1: ["わたし", "あの人", "この場所"],
+    distractorsL2: ["その場所", "あの人", "わたし"],
+    distractorsL3: ["その場所", "あの人", "わたし"],
+    exp: "二人称代名詞として「あなた・そなた」。場所を表す現代語の「そこ」と区別する。"
+  }
+];
+
+
+let currentLevel = 1;
+let currentQuestionIndex = 0;
+let score = 0;
+let shuffledWords = [];
+
+const levelSelect = document.getElementById('levelSelect');
+const startBtn = document.getElementById('startBtn');
+const quizArea = document.getElementById('quizArea');
+const questionText = document.getElementById('questionText');
+const optionsGrid = document.getElementById('optionsGrid');
+const explanationBox = document.getElementById('explanationBox');
+const nextBtn = document.getElementById('nextBtn');
+const progressFill = document.getElementById('progressFill');
+const levelBadge = document.getElementById('levelBadge');
+
+function shuffleArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+
+function validateQuestionData() {
+    const errors = [];
+    wordsData.forEach(q => {
+        if (!q.example.includes(q.target)) {
+            errors.push(`ID ${q.id}: example に target「${q.target}」がありません`);
+        }
+        if (!q.fillSentence.includes("【空欄】")) {
+            errors.push(`ID ${q.id}: fillSentence に【空欄】がありません`);
+        }
+
+        [
+            ["Lv.1", q.mean, q.distractorsL1],
+            ["Lv.2", q.contextMean, q.distractorsL2],
+            ["Lv.3", q.fillAnswer, q.distractorsL3]
+        ].forEach(([level, correct, ds]) => {
+            if (!Array.isArray(ds) || ds.length !== 3) {
+                errors.push(`ID ${q.id} ${level}: 誤答選択肢が3つではありません`);
+                return;
+            }
+            const normalized = [correct, ...ds].map(v =>
+                String(v).replace(/[・、。,\s]/g, "")
+            );
+            if (new Set(normalized).size !== 4) {
+                errors.push(`ID ${q.id} ${level}: 重複またはほぼ同一表記の選択肢があります`);
+            }
+        });
+    });
+
+    if (errors.length) {
+        console.error("問題データ検証エラー:", errors);
+    } else {
+        console.info(`問題データ検証OK: ${wordsData.length}語 × 3レベル`);
+    }
+}
+
+validateQuestionData();
+
+startBtn.addEventListener('click', () => {
+    currentLevel = parseInt(levelSelect.value);
+    shuffledWords = shuffleArray(wordsData);
+    currentQuestionIndex = 0;
+    score = 0;
+    quizArea.style.display = 'block';
+    renderQuestion();
+});
+
+function renderQuestion() {
+    explanationBox.style.display = 'none';
+    nextBtn.style.display = 'none';
+    optionsGrid.innerHTML = '';
+
+    const qData = shuffledWords[currentQuestionIndex];
+    levelBadge.textContent = `Phase 1 - Lv.${currentLevel}`;
+
+    const progress = (currentQuestionIndex / shuffledWords.length) * 100;
+    progressFill.style.width = `${progress}%`;
+
+    const correctAnswer =
+        currentLevel === 1 ? qData.mean :
+        currentLevel === 2 ? qData.contextMean :
+        qData.fillAnswer;
+
+    if (currentLevel === 1) {
+        questionText.innerHTML =
+            `「<span class="underlined">${qData.word}</span>」の基本の意味として最も適切なものを選びなさい。`;
+    } else if (currentLevel === 2) {
+        const highlightedExample = qData.example.replace(
+            qData.target,
+            `<span class="underlined">${qData.target}</span>`
+        );
+        questionText.innerHTML =
+            `次の古文を読み、下線部の意味として最も適切なものを選びなさい。<br><br>${highlightedExample}`;
+    } else {
+        const fillHtml = qData.fillSentence.replace(
+            "【空欄】",
+            `<span class="underlined">【 空欄 】</span>`
+        );
+        questionText.innerHTML =
+            `次の古文と現代語訳を対応させ、【空欄】に入る最も適切な言葉を選びなさい。` +
+            `<br><br>【古文】${qData.example}` +
+            `<br>【現代語訳】${fillHtml}`;
+    }
+
+    const distractors =
+        currentLevel === 1 ? qData.distractorsL1 :
+        currentLevel === 2 ? qData.distractorsL2 :
+        qData.distractorsL3;
+
+    const options = shuffleArray([correctAnswer, ...distractors]);
+
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => checkAnswer(opt, correctAnswer, qData, btn));
+        optionsGrid.appendChild(btn);
+    });
+}
+
+function checkAnswer(selectedOpt, correctOpt, qData, clickedBtn) {
+    const buttons = optionsGrid.querySelectorAll('.option-btn');
+    buttons.forEach(btn => btn.disabled = true);
+
+    if (selectedOpt === correctOpt) {
+        clickedBtn.classList.add('correct');
+        score++;
+    } else {
+        clickedBtn.classList.add('wrong');
+        buttons.forEach(btn => {
+            if (btn.textContent === correctOpt) {
+                btn.classList.add('correct');
+            }
+        });
+    }
+
+    explanationBox.innerHTML = `
+        <strong>【解説】</strong><br>
+        <strong>基本の意味：</strong>${qData.mean}<br>
+        <strong>この文での意味：</strong>${qData.contextMean}<br>
+        <strong>例文：</strong>${qData.example}<br>
+        <strong>現代語訳：</strong>${qData.translate}<br>
+        <strong>ポイント：</strong>${qData.exp}
+    `;
+    explanationBox.style.display = 'block';
+    nextBtn.style.display = 'block';
+}
+
+nextBtn.addEventListener('click', () => {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < shuffledWords.length) {
+        renderQuestion();
+    } else {
+        finishQuiz();
+    }
+});
+
+function finishQuiz() {
+    progressFill.style.width = '100%';
+    questionText.innerHTML = `🎉 演習終了！`;
+    optionsGrid.innerHTML = `
+        <div style="text-align:center; padding:20px;">
+            <p style="font-size:1.2rem;">Phase 1 (60語) の演習が完了しました。</p>
+            <p style="font-size:1.5rem; font-weight:bold; color:var(--accent-color);">
+                スコア: ${score} / ${shuffledWords.length} 問正解
+            </p>
+        </div>
+    `;
+    explanationBox.style.display = 'none';
+    nextBtn.style.display = 'none';
+}
+
+</script>
+
+</body>
+</html>
